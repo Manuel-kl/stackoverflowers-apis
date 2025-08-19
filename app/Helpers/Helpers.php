@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use RuntimeException;
+
 class Helpers
 {
     public static function formatPhoneNumber($phone): ?string
@@ -30,5 +32,20 @@ class Helpers
         }
 
         return null;
+    }
+
+    public static function generateHostToken(): string
+    {
+        $emailUsername = config('services.hostraha.username');
+        $apiKey = config('services.hostraha.api_key');
+
+        if (!$emailUsername || !$apiKey) {
+            throw new RuntimeException('Missing registrar username or API key for token generation.');
+        }
+
+        $payload = $emailUsername.':'.gmdate('y-m-d H');
+        $hmac = hash_hmac('sha256', $apiKey, $payload);
+
+        return base64_encode($hmac);
     }
 }

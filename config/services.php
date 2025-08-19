@@ -46,4 +46,20 @@ return [
         'endpoint' => env('SMS_API_ENDPOINT'),
         'from' => env('SMS_FROM'),
     ],
+
+    'hostafrica' => [
+        'endpoint' => env('HOSTAFRICA_API_ENDPOINT', 'https://my.hostafrica.com/modules/addons/DomainsReseller/api/index.php'),
+        'username' => env('HOSTAFRICA_API_USERNAME'),
+        'token' => env('HOSTAFRICA_API_TOKEN'),
+    ],
+
+    'rdap' => [
+        'ke_endpoint' => env('RDAP_KE_ENDPOINT', 'https://rdap.kenic.or.ke'),
+    ],
+
+    'hostraha' => [
+        'base_url' => env('HOSTRAHA_BASE_URL'),
+        'username' => env('HOSTRAHA_USERNAME'),
+        'api_key' => env('HOSTRAHA_API_KEY'),
+    ],
 ];
