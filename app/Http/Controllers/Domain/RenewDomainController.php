@@ -15,7 +15,7 @@ class RenewDomainController extends Controller
         $this->domainService = $domainService;
     }
 
-    public function registerDomain(): JsonResponse
+    public function index(): JsonResponse
     {
         $domain = request('domain');
 

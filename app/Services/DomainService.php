@@ -43,15 +43,45 @@ class DomainService
     }
 
     /**
-     * Get TLD pricing information
+     * Get domain pricing for a specific type
+     */
+    public function getDomainPricing(string $type, string $domain): Response
+    {
+        $action = '/order/pricing/domains/'.$type;
+
+        $params = [
+            'domain' => $domain,
+        ];
+
+        $response = Http::withHeaders($this->headers)
+            ->get($this->endpoint.$action, $params);
+
+        return $response;
+    }
+
+    /**
+     * Get TLD pricing
      */
     public function getTldPricing(): Response
     {
         $action = '/tlds/pricing';
 
         $response = Http::withHeaders($this->headers)
+            ->get($this->endpoint.$action);
+
+        return $response;
+    }
+
+    /**
+     * Get domain suggestions
+     */
+    public function getDomainSuggestions(array $params): Response
+    {
+        $action = '/domains/lookup/suggestions';
+
+        $response = Http::withHeaders($this->headers)
             ->asForm()
-            ->post($this->endpoint.$action);
+            ->post($this->endpoint.$action, $params);
 
         return $response;
     }

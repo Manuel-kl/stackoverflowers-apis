@@ -28,11 +28,6 @@ class RegisterDomainController extends Controller
         $params = [
             'domain' => $domain,
             'regperiod' => $request->input('regperiod', '1'),
-            'addons' => $request->input('addons', [
-                'dnsmanagement' => 0,
-                'emailforwarding' => 1,
-                'idprotection' => 1,
-            ]),
         ];
 
         $response = $this->domainService->registerDomain($params);

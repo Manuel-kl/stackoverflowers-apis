@@ -6,6 +6,7 @@ use App\Http\Controllers\Domain\DomainController;
 use App\Http\Controllers\Domain\DomainPricingController;
 use App\Http\Controllers\Domain\RegisterDomainController;
 use App\Http\Controllers\Domain\RenewDomainController;
+use App\Http\Controllers\Domain\TldController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,9 +14,12 @@ Route::post('/signup', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/domains/search', [DomainController::class, 'index']);
+Route::post('/domains/suggestions', [DomainController::class, 'suggestions']);
 Route::post('/domains/renew', [RenewDomainController::class, 'index']);
 Route::post('/domains/register', [RegisterDomainController::class, 'index']);
-Route::get('/tlds/pricing', [DomainPricingController::class, 'tldPricing']);
+Route::get('/domains/pricing/{type}', [DomainPricingController::class, 'index']);
+Route::get('tlds', [TldController::class, 'all']);
+Route::get('tlds/pricing', [TldController::class, 'pricing']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/user', [UserController::class, 'index']);
