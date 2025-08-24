@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\Domain\DomainController;
 use App\Http\Controllers\Domain\DomainPricingController;
 use App\Http\Controllers\Domain\RegisterDomainController;
@@ -26,4 +27,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/otp/send', [OtpController::class, 'sendVerificationCode']);
     Route::post('/otp/verify', [OtpController::class, 'verifyCode']);
+
+    // Cart routes
+    Route::post('/cart/initiate', [CartController::class, 'initiateCart']);
+    Route::post('/cart/add', [CartController::class, 'addToCart']);
 });

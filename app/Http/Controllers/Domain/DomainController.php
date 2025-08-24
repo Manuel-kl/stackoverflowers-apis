@@ -21,12 +21,18 @@ class DomainController extends Controller
     {
         $data = $request->validated();
 
+        $searchTerm = $data['searchTerm'];
+        $tld = '';
+        $name = $searchTerm;
+
+        if (preg_match('/^([^.]+)\.(.+)$/', $searchTerm, $matches)) {
+            $name = $matches[1];
+            $tld = $matches[2];
+        }
+
         $params = [
-            'searchTerm' => $data['searchTerm'],
-            'punyCodeSearchTerm' => $data['punyCodeSearchTerm'],
-            'tldsToInclude' => $data['tldsToInclude'],
-            'isIdnDomain' => $data['isIdnDomain'],
-            'premiumEnabled' => $data['premiumEnabled'],
+            'searchTerm' => $name,
+            'tldsToInclude' => [$tld],
         ];
 
         $response = $this->domainService->checkAvailability($params);
@@ -37,32 +43,45 @@ class DomainController extends Controller
             $uniqueResults = collect($responseData)->unique('domainName')->values();
 
             $responseData = $uniqueResults->map(function ($domain) {
-                $tld = '.'.$domain['tld'];
-                $pricing = KeDomainPricing::where('tld', $tld)->first();
+                if ($domain['isAvailable'] === true) {
+                    $tld = '.'.$domain['tld'];
+                    $pricing = KeDomainPricing::where('tld', $tld)->first();
 
-                if ($pricing) {
-                    $domain['pricing'] = $this->formatPricing($pricing);
-                    $domain['ke_pricing'] = [
-                        'registration_price' => $pricing->registration_price,
-                        'renewal_price' => $pricing->renewal_price,
-                        'transfer_price' => $pricing->transfer_price,
-                        'grace_fee' => $pricing->grace_fee,
-                        'grace_days' => $pricing->grace_days,
-                        'redemption_days' => $pricing->redemption_days,
-                        'redemption_fee' => $pricing->redemption_fee,
-                        'available_years' => $pricing->years,
-                        'currency' => 'KES',
-                    ];
+                    if ($pricing) {
+                        $domain['pricing'] = $this->formatPricing($pricing);
+                        $domain['ke_pricing'] = [
+                            'registration_price' => $pricing->registration_price,
+                            'renewal_price' => $pricing->renewal_price,
+                            'transfer_price' => $pricing->transfer_price,
+                            'grace_fee' => $pricing->grace_fee,
+                            'grace_days' => $pricing->grace_days,
+                            'redemption_days' => $pricing->redemption_days,
+                            'redemption_fee' => $pricing->redemption_fee,
+                            'available_years' => $pricing->years,
+                            'currency' => 'KES',
+                        ];
+                    }
                 }
 
                 return $domain;
             })->toArray();
 
+            $originalRequest = request()->all();
+            request()->replace(['searchTerm' => $name]);
+            $suggestions = $this->suggestions($request)->getData();
+            request()->replace($originalRequest);
+
             if (count($responseData) === 1) {
-                return response()->json($responseData[0]);
+                return response()->json([
+                    'domain' => $responseData[0],
+                    'suggestions' => $suggestions,
+                ]);
             }
 
-            return response()->json($responseData);
+            return response()->json([
+                'domains' => $responseData,
+                'suggestions' => $suggestions,
+            ]);
         }
 
         return response()->json([
@@ -110,13 +129,14 @@ class DomainController extends Controller
     public function suggestions(DomainLookupRequest $request): JsonResponse
     {
         $data = $request->validated();
+        $tlds = KeDomainPricing::pluck('tld')->toArray();
 
         $params = [
             'searchTerm' => $data['searchTerm'],
-            'punyCodeSearchTerm' => $data['punyCodeSearchTerm'],
-            'tldsToInclude' => $data['tldsToInclude'],
-            'isIdnDomain' => $data['isIdnDomain'],
-            'premiumEnabled' => $data['premiumEnabled'],
+            'tldsToInclude' => $tlds,
+            'suggestionSettings' => [
+                'maxResults' => 10,
+            ],
         ];
 
         $response = $this->domainService->getDomainSuggestions($params);
@@ -124,14 +144,8 @@ class DomainController extends Controller
         if ($response->successful()) {
             $suggestions = $response->json();
 
-            // Filter for only .ke domains that exist in our database
             $keDomains = collect($suggestions)->filter(function ($suggestion) {
                 return str_ends_with($suggestion['tld'], '.ke');
-            })->filter(function ($suggestion) {
-                // Check if this TLD exists in our saved .ke domains
-                $tld = '.'.$suggestion['tld'];
-
-                return KeDomainPricing::where('tld', $tld)->exists();
             })->values();
 
             return response()->json($keDomains);
