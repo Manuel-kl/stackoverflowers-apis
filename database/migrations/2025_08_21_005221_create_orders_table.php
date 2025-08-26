@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('orders');
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->string('status');
-            $table->decimal('total_price', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('currency', 10)->default('KES');
             $table->string('payment_reference')->nullable();
             $table->timestamps();

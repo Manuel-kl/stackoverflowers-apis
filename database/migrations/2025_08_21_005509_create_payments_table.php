@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('payments');
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
@@ -21,15 +22,9 @@ return new class extends Migration
             $table->string('payment_reference')->nullable();
             $table->string('payment_method')->nullable();
             $table->string('transaction_id')->nullable();
+            $table->string('mpesa_code')->nullable();
+            $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('payments');
     }
 };

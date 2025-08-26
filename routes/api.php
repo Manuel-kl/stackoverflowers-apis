@@ -8,6 +8,7 @@ use App\Http\Controllers\Domain\DomainPricingController;
 use App\Http\Controllers\Domain\RegisterDomainController;
 use App\Http\Controllers\Domain\RenewDomainController;
 use App\Http\Controllers\Domain\TldController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,4 +32,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     // Cart routes
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeFromCart']);
     Route::apiResource('cart', CartController::class)->only(['index', 'store', 'destroy']);
+
+    // Order routes
+    Route::apiResource('orders', OrderController::class)->only(['index', 'store', 'show']);
 });
