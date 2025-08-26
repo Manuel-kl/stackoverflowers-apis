@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Domain;
 
+use App\Rules\ValidKeDomain;
 use Illuminate\Foundation\Http\FormRequest;
 
 class DomainLookupRequest extends FormRequest
@@ -14,7 +15,7 @@ class DomainLookupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'searchTerm' => ['required', 'string'],
+            'searchTerm' => ['required', 'string', new ValidKeDomain],
         ];
     }
 }

@@ -29,6 +29,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/otp/verify', [OtpController::class, 'verifyCode']);
 
     // Cart routes
-    Route::post('/cart/initiate', [CartController::class, 'initiateCart']);
-    Route::post('/cart/add', [CartController::class, 'addToCart']);
+    Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeFromCart']);
+    Route::apiResource('cart', CartController::class)->only(['index', 'store', 'destroy']);
 });

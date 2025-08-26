@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Domain;
 
+use App\Rules\ValidKeDomain;
 use Illuminate\Foundation\Http\FormRequest;
 
 class DomainPricingRequest extends FormRequest
@@ -14,7 +15,7 @@ class DomainPricingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'domain' => 'required|string|max:255',
+            'domain' => ['required', 'string', 'max:255', new ValidKeDomain],
         ];
     }
 

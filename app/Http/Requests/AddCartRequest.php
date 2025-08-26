@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidKeDomain;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AddCartRequest extends FormRequest
@@ -22,7 +23,7 @@ class AddCartRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'domain_name' => 'required|string|max:255',
+            'domain_name' => ['required', 'string', 'max:255', new ValidKeDomain],
             'number_of_years' => 'required|integer|min:1|max:10',
             'price' => 'required|numeric|min:0',
         ];

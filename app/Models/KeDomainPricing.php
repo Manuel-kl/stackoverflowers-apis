@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class KeDomainPricing extends Model
 {
@@ -22,5 +23,36 @@ class KeDomainPricing extends Model
             'years' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    public static function getActiveTlds(): array
+    {
+        return Cache::rememberForever('valid_ke_tlds', function () {
+            return static::where('is_active', true)
+                ->pluck('tld')
+                ->toArray();
+        });
+    }
+
+    public static function clearTldCache(): void
+    {
+        Cache::forget('valid_ke_tlds');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function () {
+            static::clearTldCache();
+        });
+
+        static::updated(function () {
+            static::clearTldCache();
+        });
+
+        static::deleted(function () {
+            static::clearTldCache();
+        });
     }
 }
