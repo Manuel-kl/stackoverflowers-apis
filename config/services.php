@@ -67,4 +67,11 @@ return [
         'base_url' => env('PAYSTACK_BASE_URL'),
         'secret_key' => env('PAYSTACK_SECRET_KEY'),
     ],
+
+    'whmcs' => [
+        'identifier' => env('WHMCS_IDENTIFIER'),
+        'secret' => env('WHMCS_SECRET'),
+        'url' => env('WHMCS_URL'),
+        'currency_id' => env('WHMCS_CURRENCY_ID', 2),
+    ],
 ];

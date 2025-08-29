@@ -3,47 +3,79 @@
 namespace App\Http\Controllers\Domain;
 
 use App\Http\Controllers\Controller;
-use App\Services\DomainService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class RenewDomainController extends Controller
 {
-    protected DomainService $domainService;
-
-    public function __construct(DomainService $domainService)
+    public function index(Request $request)
     {
-        $this->domainService = $domainService;
-    }
+        $domainId = $request->input('domainid');
+        $domain = $request->input('domain');
+        $regPeriod = $request->input('regperiod');
 
-    public function index(): JsonResponse
-    {
-        $domain = request('domain');
-
-        if (!$domain) {
+        if (!$domainId && !$domain) {
             return response()->json([
-                'error' => 'Domain is required.',
+                'success' => false,
+                'message' => 'Either domain ID or domain name is required',
             ], 422);
         }
 
+        $identifier = config('services.whmcs.identifier');
+        $secret = config('services.whmcs.secret');
+        $whmcsUrl = rtrim(config('services.whmcs.url'), '/').'/includes/api.php';
+
         $params = [
-            'domain' => $domain,
-            'regperiod' => request('regperiod', '3'),
-            'addons' => request('addons', [
-                'dnsmanagement' => 0,
-                'emailforwarding' => 1,
-                'idprotection' => 1,
-            ]),
+            'action' => 'DomainRenew',
+            'identifier' => $identifier,
+            'secret' => $secret,
+            'responsetype' => 'json',
         ];
 
-        $response = $this->domainService->renewDomain($params);
-
-        if ($response->successful()) {
-            return response()->json($response->json());
+        if ($domainId) {
+            $params['domainid'] = $domainId;
         }
 
+        if ($domain) {
+            $params['domain'] = $domain;
+        }
+
+        if ($regPeriod !== null) {
+            $params['regperiod'] = $regPeriod;
+        }
+
+        $renewRes = Http::asForm()
+            ->timeout(300)
+            ->post($whmcsUrl, $params);
+
+        if (!$renewRes->ok()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to communicate with WHMCS API',
+                'data' => $renewRes->body(),
+            ], 500);
+        }
+
+        $response = $renewRes->json();
+
+        if (($response['result'] ?? '') !== 'success') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to renew domain',
+                'data' => $response,
+            ], 400);
+        }
+
+        $renewalInfo = [
+            'domainid' => $domainId,
+            'domain' => $domain,
+            'regperiod' => $regPeriod,
+        ];
+
         return response()->json([
-            'error' => 'Domain renewal failed.',
-            'details' => $response->body(),
-        ], $response->status() ?: 500);
+            'success' => true,
+            'message' => 'Domain renewed successfully',
+            'data' => $renewalInfo,
+        ]);
     }
 }

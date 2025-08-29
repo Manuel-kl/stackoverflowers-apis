@@ -5,20 +5,18 @@ namespace App\Enums;
 enum OrderItemStatusEnum: string
 {
     case PENDING = 'pending';
-    case PROCESSING = 'processing';
-    case COMPLETED = 'completed';
-    case FAILED = 'failed';
-    case REJECTED = 'rejected';
+    case ACTIVE = 'active';
+    case EXPIRED = 'expired';
+    case PAID = 'paid';
     case CANCELLED = 'cancelled';
 
     public function label(): string
     {
         return match ($this) {
             self::PENDING => 'Pending',
-            self::PROCESSING => 'Processing',
-            self::COMPLETED => 'Completed',
-            self::FAILED => 'Failed',
-            self::REJECTED => 'Rejected',
+            self::ACTIVE => 'Active',
+            self::EXPIRED => 'Expired',
+            self::PAID => 'Paid',
             self::CANCELLED => 'Cancelled',
         };
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Payment;
 
+use App\Enums\OrderItemStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\HandlesExceptions;
 use App\Http\Controllers\Controller;
@@ -11,6 +12,7 @@ use App\Services\Payments\PaystackService;
 use Exception;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 
 class PaystackController extends Controller
 {
@@ -24,16 +26,16 @@ class PaystackController extends Controller
     public function queryTransaction(Request $request)
     {
         $data = $request->validate([
-            'reference' => 'required|string',
+            'payment_reference' => 'required|string',
         ]);
 
-        $transactionRef = $data['reference'];
+        $transactionRef = $data['payment_reference'];
         $payment = null;
 
         try {
             $response = $this->paystackSvc->queryTransaction($transactionRef);
 
-            $payment = Payment::with('order:id,user_id')->where('reference', $transactionRef)->first();
+            $payment = Payment::with('order:id,user_id', 'taxes')->where('payment_reference', $transactionRef)->first();
             throw_if(!$payment, new \Exception('No payment found', 404));
 
             if ($response['data']['status'] === 'ongoing' || $response['data']['status'] === 'pending') {
@@ -79,7 +81,7 @@ class PaystackController extends Controller
 
                 $payment->update([
                     'status' => $response['data']['status'],
-                    'paid_at' => $response['data']['paid_at'],
+                    'paid_at' => Date::parse($response['data']['paid_at']),
                     'mpesa_code' => $response['data']['receipt_number'] == '' ? null : $response['data']['receipt_number'],
                     'transaction_id' => $response['data']['id'],
                 ]);
@@ -90,6 +92,10 @@ class PaystackController extends Controller
 
                 foreach ($payment->taxes as $tax) {
                     $tax->update(['payment_status' => $response['data']['status']]);
+                }
+
+                foreach ($payment->order->items as $item) {
+                    $item->update(['status' => OrderItemStatusEnum::ACTIVE->value]);
                 }
 
                 return response()->json([
@@ -108,6 +114,10 @@ class PaystackController extends Controller
 
             foreach ($payment->taxes as $tax) {
                 $tax->update(['payment_status' => $response['data']['status']]);
+            }
+
+            foreach ($payment->order->items as $item) {
+                $item->update(['status' => OrderItemStatusEnum::CANCELLED->value]);
             }
 
             return response()->json([

@@ -39,4 +39,11 @@ class RegistrationRequest extends FormRequest
             'password' => 'required|string|min:6',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'phone_number.required' => 'Please enter a valid phone number.',
+        ];
+    }
 }

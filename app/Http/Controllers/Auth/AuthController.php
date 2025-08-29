@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -53,6 +54,23 @@ class AuthController extends Controller
         return response()->json([
             'data' => null,
             'message' => 'Logged out successfully',
+        ]);
+    }
+
+    public function deleteUser(Request $request): JsonResponse
+    {
+        $password = $request->input('password');
+
+        if (!Hash::check($password, Auth::user()->password)) {
+            return response()->json(['message' => 'Invalid password'], 401);
+        }
+
+        $user = Auth::user();
+
+        $user->delete();
+
+        return response()->json([
+            'message' => 'User deleted successfully',
         ]);
     }
 }

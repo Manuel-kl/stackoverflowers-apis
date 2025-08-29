@@ -35,8 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {
+                $flatErrors = collect($e->errors())->flatten()->toArray();
+
                 return response()->json([
-                    'message' => 'Validation error.',
+                    'message' => implode(' ', $flatErrors),
                     'errors' => $e->errors(),
                 ], 422);
             }

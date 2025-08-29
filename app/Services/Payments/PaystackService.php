@@ -12,13 +12,13 @@ class PaystackService
     {
         $paystackUrl = config('services.paystack.base_url').'/charge';
 
-        $campaign = $data['campaign'];
+        $order = $data['order'];
 
         $paymentData = [
             'amount' => $data['amount'] * 100,
-            'email' => $campaign->user->email,
-            'first_name' => $campaign->user->name,
-            'phone' => $campaign->user->phone_number,
+            'email' => $order->user->email,
+            'first_name' => $order->user->name,
+            'phone' => $order->user->phone_number,
             'currency' => 'KES',
             'mobile_money' => [
                 'phone' => $data['phone_number'],
@@ -36,11 +36,11 @@ class PaystackService
     public function cardPayment(array $data): mixed
     {
         $paystackUrl = config('services.paystack.base_url').'/charge';
-        $campaign = $data['campaign'];
+        $order = $data['order'];
 
         $paymentData = [
             'amount' => $data['amount'] * 100,
-            'email' => $campaign->user->email,
+            'email' => $order->user->email,
             'currency' => 'KES',
             'card' => [
                 'number' => $data['card_number'],
@@ -60,12 +60,12 @@ class PaystackService
     {
         $paystackUrl = config('services.paystack.base_url').'/charge';
 
-        $campaign = $data['campaign'];
+        $order = $data['order'];
 
         $paymentData = [
             'amount' => $data['amount'] * 100,
-            'email' => $campaign->user->email,
-            'authorization_code' => 'AUTH_ivr2qhuzcg',
+            'email' => $order->user->email,
+            'authorization_code' => $data['authorization_code'],
             'currency' => 'KES',
         ];
 
