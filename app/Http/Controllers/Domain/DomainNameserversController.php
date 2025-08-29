@@ -25,8 +25,8 @@ class DomainNameserversController extends Controller
 
         $params = [
             'action' => 'DomainGetNameservers',
-            'identifier' => $identifier,
-            'secret' => $secret,
+            'username' => $identifier,
+            'password' => $secret,
             'domainid' => $domainId,
             'responsetype' => 'json',
         ];
@@ -75,17 +75,16 @@ class DomainNameserversController extends Controller
     public function store(Request $request)
     {
         $domainId = $request->input('domainid');
-        $domain = $request->input('domain');
         $ns1 = $request->input('ns1');
         $ns2 = $request->input('ns2');
         $ns3 = $request->input('ns3');
         $ns4 = $request->input('ns4');
         $ns5 = $request->input('ns5');
 
-        if (!$domainId && !$domain) {
+        if (!$domainId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Either domain ID or domain name is required',
+                'message' => 'Domain ID is required',
             ], 422);
         }
 
@@ -102,8 +101,8 @@ class DomainNameserversController extends Controller
 
         $params = [
             'action' => 'DomainUpdateNameservers',
-            'identifier' => $identifier,
-            'secret' => $secret,
+            'username' => $identifier,
+            'password' => $secret,
             'ns1' => $ns1,
             'ns2' => $ns2,
             'responsetype' => 'json',
@@ -111,10 +110,6 @@ class DomainNameserversController extends Controller
 
         if ($domainId) {
             $params['domainid'] = $domainId;
-        }
-
-        if ($domain) {
-            $params['domain'] = $domain;
         }
 
         if ($ns3) {
@@ -165,7 +160,6 @@ class DomainNameserversController extends Controller
             'message' => 'Nameservers updated successfully',
             'data' => [
                 'domainid' => $domainId,
-                'domain' => $domain,
                 'nameservers' => $nameservers,
                 'count' => count($nameservers),
             ],

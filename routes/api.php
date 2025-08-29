@@ -11,6 +11,7 @@ use App\Http\Controllers\Domain\DomainSettingController;
 use App\Http\Controllers\Domain\RegisterDomainController;
 use App\Http\Controllers\Domain\RenewDomainController;
 use App\Http\Controllers\Domain\TldController;
+use App\Http\Controllers\Domain\UserDomainController;
 use App\Http\Controllers\DomainTaxController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Payment\OrderPaymentController;
@@ -46,6 +47,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/password/change', [PasswordResetController::class, 'changePassword']);
     Route::delete('/user/delete', [AuthController::class, 'deleteUser']);
     Route::post('/user/details', [UserController::class, 'userDetails']);
+
+    // User domains
+    Route::get('/user/domains', [UserDomainController::class, 'index']);
 
     // Cart routes
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeFromCart']);

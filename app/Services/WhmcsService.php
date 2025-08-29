@@ -29,7 +29,7 @@ class WhmcsService
             'responsetype' => 'json',
         ]);
 
-        $response = Http::asForm()->post($this->baseUrl.'/includes/api.php', $body);
+        $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
 
         if ($response->failed()) {
             $this->logError('WHMCS AddOrder request failed', [
@@ -63,7 +63,7 @@ class WhmcsService
             'invoiceid' => $invoiceId,
         ];
 
-        $response = Http::asForm()->post($this->baseUrl.'/includes/api.php', $body);
+        $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
         if ($response->failed()) {
             throw new \RuntimeException('Failed to connect to WHMCS API');
         }
@@ -85,7 +85,7 @@ class WhmcsService
             'id' => $orderId,
         ];
 
-        $response = Http::asForm()->post($this->baseUrl.'/includes/api.php', $body);
+        $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
         if ($response->failed()) {
             throw new \RuntimeException('Failed to connect to WHMCS API');
         }
@@ -119,7 +119,7 @@ class WhmcsService
             'sendemail' => true,
         ], fn ($v) => !is_null($v));
 
-        $response = Http::asForm()->post($this->baseUrl.'/includes/api.php', $body);
+        $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
         if ($response->failed()) {
             $this->logError('WHMCS AcceptOrder request failed', [
                 'status' => $response->status(),
@@ -153,7 +153,9 @@ class WhmcsService
             'noemail' => $data['noemail'] ?? false,
         ], fn ($v) => !is_null($v));
 
-        $response = Http::asForm()->post($this->baseUrl.'/includes/api.php', $body);
+        $response = Http::asForm()
+            ->timeout(300)
+            ->post($this->baseUrl.'/includes/api.php', $body);
         if ($response->failed()) {
             $this->logError('WHMCS AddInvoicePayment request failed', [
                 'status' => $response->status(),
@@ -167,6 +169,41 @@ class WhmcsService
             $this->logError('WHMCS AddInvoicePayment error', [
                 'message' => $result['message'] ?? 'Unknown error',
                 'data' => $result,
+            ]);
+        }
+
+        return $result ?? ['result' => 'error', 'message' => 'No response'];
+    }
+
+    public function domainRegister(int $domainId, ?string $domain = null, ?string $idnLanguage = null): array
+    {
+        $body = array_filter([
+            'action' => 'DomainRegister',
+            'username' => $this->username,
+            'password' => $this->password,
+            'responsetype' => 'json',
+            'domainid' => $domainId,
+            'domain' => $domain,
+            'idnlanguage' => $idnLanguage,
+            ''
+        ], fn ($v) => !is_null($v));
+
+        $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
+        if ($response->failed()) {
+            $this->logError('WHMCS DomainRegister request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'domain_id' => $domainId,
+            ]);
+            throw new \RuntimeException('Failed to connect to WHMCS API');
+        }
+
+        $result = $response->json();
+        if (!isset($result['result']) || $result['result'] !== 'success') {
+            $this->logError('WHMCS DomainRegister error', [
+                'message' => $result['message'] ?? 'Unknown error',
+                'data' => $result,
+                'domain_id' => $domainId,
             ]);
         }
 

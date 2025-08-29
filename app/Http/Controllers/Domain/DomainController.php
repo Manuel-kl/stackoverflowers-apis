@@ -246,6 +246,8 @@ class DomainController extends Controller
                 'domain' => $domainFqdn,
                 'responsetype' => 'json',
             ]);
+        
+        return $whoisRes->json();
 
         $isAvailable = null;
         $status = null;
