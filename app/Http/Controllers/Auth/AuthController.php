@@ -9,15 +9,43 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
-    public function register(RegistrationRequest $request): JsonResponse
+    public function register(RegistrationRequest $request)
     {
         $data = $request->validated();
 
         $user = User::create($data);
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        try {
+            $whmcsData = [
+                'username' => config('services.whmcs.identifier'),
+                'password' => config('services.whmcs.secret'),
+                'responsetype' => 'json',
+                'action' => 'AddClient',
+                'firstname' => $data['firstname'],
+                'lastname' => $data['lastname'],
+                'email' => $data['email'],
+                'password2' => $data['password'],
+                'phonenumber' => $data['phone_number'],
+                'skipvalidation' => true,
+            ];
+
+            $response = Http::timeout(300)->asForm()->post(config('services.whmcs.url').'/includes/api.php', $whmcsData);
+
+            if ($response->successful()) {
+                $result = $response->json();
+
+                if ($result['result'] === 'success') {
+                    $user->update(['whmcs_client_id' => $result['clientid'] ?? null]);
+                }
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
 
         return response()->json([
             'data' => $user,

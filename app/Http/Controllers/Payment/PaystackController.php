@@ -6,9 +6,11 @@ use App\Enums\OrderItemStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\HandlesExceptions;
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessWhmcsPayment;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Services\Payments\PaystackService;
+use App\Services\WhmcsService;
 use Exception;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ class PaystackController extends Controller
 {
     use HandlesExceptions;
 
-    public function __construct(private PaystackService $paystackSvc)
+    public function __construct(private PaystackService $paystackSvc, private WhmcsService $whmcsService)
     {
         $this->paystackSvc = $paystackSvc;
     }
@@ -35,7 +37,7 @@ class PaystackController extends Controller
         try {
             $response = $this->paystackSvc->queryTransaction($transactionRef);
 
-            $payment = Payment::with('order:id,user_id', 'taxes')->where('payment_reference', $transactionRef)->first();
+            $payment = Payment::with('order:id,user_id,whmcs_invoice_id,whmcs_order_id', 'taxes')->where('payment_reference', $transactionRef)->first();
             throw_if(!$payment, new \Exception('No payment found', 404));
 
             if ($response['data']['status'] === 'ongoing' || $response['data']['status'] === 'pending') {
@@ -96,6 +98,14 @@ class PaystackController extends Controller
 
                 foreach ($payment->order->items as $item) {
                     $item->update(['status' => OrderItemStatusEnum::ACTIVE->value]);
+                }
+
+                if ($payment->order->whmcs_invoice_id) {
+                    ProcessWhmcsPayment::dispatch($payment->id, [
+                        'reference' => $payment->payment_reference,
+                        'gateway' => 'mpesa',
+                        'date' => Date::parse($response['data']['paid_at'])->format('Y-m-d H:i:s'),
+                    ]);
                 }
 
                 return response()->json([

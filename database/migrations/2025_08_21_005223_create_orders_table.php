@@ -14,7 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('orders')) {
             Schema::create('orders', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
                 $table->string('status');
                 $table->decimal('total_amount', 10, 2)->default(0);
                 $table->string('currency', 10)->default('KES');

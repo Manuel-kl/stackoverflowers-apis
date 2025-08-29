@@ -45,6 +45,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/otp/verify', [OtpController::class, 'verifyCode']);
     Route::post('/password/change', [PasswordResetController::class, 'changePassword']);
     Route::delete('/user/delete', [AuthController::class, 'deleteUser']);
+    Route::post('/user/details', [UserController::class, 'userDetails']);
 
     // Cart routes
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeFromCart']);

@@ -17,7 +17,7 @@ class PaystackService
         $paymentData = [
             'amount' => $data['amount'] * 100,
             'email' => $order->user->email,
-            'first_name' => $order->user->name,
+            'name' => $order->user->firstname.' '.$order->user->lastname,
             'phone' => $order->user->phone_number,
             'currency' => 'KES',
             'mobile_money' => [

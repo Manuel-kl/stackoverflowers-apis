@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderItemStatusEnum;
 use App\Enums\OrderStatusEnum;
+use App\Jobs\SyncOrderToWhmcs;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,8 @@ class OrderController extends Controller
 
             return $order;
         });
+
+        SyncOrderToWhmcs::dispatch($order);
 
         return response()->json([
             'success' => true,

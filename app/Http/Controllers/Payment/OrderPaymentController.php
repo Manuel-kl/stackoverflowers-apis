@@ -3,14 +3,10 @@
 namespace App\Http\Controllers\Payment;
 
 use App\Enums\PaymentStatusEnum;
-use App\Enums\TaxStatusEnum;
-use App\Enums\TaxTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payment\OrderPaymentRequest;
-use App\Models\DomainPurchaseDeduction;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\PaymentTaxes;
 use App\Services\Payments\PaystackService;
 
 class OrderPaymentController extends Controller
@@ -23,18 +19,7 @@ class OrderPaymentController extends Controller
 
         $order->load(['items', 'user']);
 
-        $subtotalAmount = $order->items->sum(fn ($item) => (float) $item->price);
-
-        $activeTaxes = PaymentTaxes::where('status', TaxStatusEnum::ACTIVE->value)->get();
-
-        $percentageTaxes = $activeTaxes->where('type', TaxTypeEnum::PERCENTAGE->value);
-
-        $percentageTotal = 0.0;
-        foreach ($percentageTaxes as $tax) {
-            $percentageTotal += round($subtotalAmount * ((float) $tax->value / 100));
-        }
-
-        $totalAmount = round($subtotalAmount + $percentageTotal);
+        $totalAmount = $order->items->sum(fn ($item) => (float) $item->price);
 
         $response = match ($data['payment_method']) {
             'mpesa' => $this->paystackSvc->stkPush([
@@ -70,25 +55,6 @@ class OrderPaymentController extends Controller
         ]);
 
         $payment['payment_url'] = $response['data']['url'] ?? null;
-
-        foreach ($order->items as $item) {
-            foreach ($percentageTaxes as $tax) {
-                $amount = round(((float) $item->price) * ((float) $tax->value / 100));
-                if ($amount <= 0) {
-                    continue;
-                }
-
-                DomainPurchaseDeduction::create([
-                    'user_id' => $order->user_id,
-                    'order_id' => $order->id,
-                    'tax_id' => $tax->id,
-                    'order_item_id' => $item->id,
-                    'payment_id' => $payment->id,
-                    'currency' => $order->currency ?? 'KES',
-                    'amount' => $amount,
-                ]);
-            }
-        }
 
         if (!empty($payment->payment_reference)) {
             $order->update(['payment_reference' => $payment->payment_reference]);
