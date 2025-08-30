@@ -208,7 +208,7 @@ class DomainController extends Controller
         return $availableDomains;
     }
 
-    public function csheck(DomainLookupRequest $request)
+    public function check(DomainLookupRequest $request)
     {
         $data = $request->validated();
 
@@ -246,8 +246,6 @@ class DomainController extends Controller
                 'domain' => $domainFqdn,
                 'responsetype' => 'json',
             ]);
-
-        return response()->json($whoisRes->json(), $whoisRes->status());
 
         $isAvailable = null;
         $status = null;
@@ -437,125 +435,4 @@ class DomainController extends Controller
             'suggestions' => $suggestions,
         ]);
     }
-
-    public function check(DomainLookupRequest $request)
-{
-    $data = $request->validated();
-
-    $identifier = config('services.whmcs.identifier');
-    $secret = config('services.whmcs.secret');
-    $whmcsUrl = rtrim(config('services.whmcs.url'), '/').'/includes/api.php';
-    $currencyId = config('services.whmcs.currency_id');
-
-    $allowedTlds = [
-        'ke', 'co.ke', 'me.ke', 'mobi.ke', 'info.ke', 'ne.ke', 'or.ke', 'go.ke', 'ac.ke', 'sc.ke',
-    ];
-    $institutional = ['ac.ke', 'sc.ke', 'go.ke', 'or.ke', 'ne.ke'];
-
-    $search = strtolower(trim($data['searchTerm']));
-    $sld = $search;
-    $tld = '';
-
-    // Extract SLD and TLD
-    if (preg_match('/^([^.]+)\.([a-z0-9.-]+)$/i', $search, $m)) {
-        $sld = $m[1];
-        $tld = $m[2];
-    } else {
-        // Log invalid domain format for debugging
-        \Log::warning('Invalid domain format', ['searchTerm' => $search]);
-        return response()->json([
-            'error' => 'Invalid domain format. Please provide a valid domain (e.g., example.com).',
-        ], 422);
-    }
-
-    // Validate TLD
-    if (!in_array($tld, $allowedTlds, true)) {
-        \Log::warning('Unsupported TLD', ['tld' => $tld, 'allowed' => $allowedTlds]);
-        return response()->json([
-            'error' => 'Unsupported TLD. Allowed: ' . implode(', ', $allowedTlds),
-        ], 422);
-    }
-
-    $domainFqdn = $sld . '.' . $tld;
-
-    try {
-        // Make the API call with a shorter timeout (e.g., 30 seconds)
-        $whoisRes = Http::asForm()
-            ->timeout(30)
-            ->withOptions(['verify' => false]) // Disable SSL verification for local testing (use cautiously)
-            ->post($whmcsUrl, [
-                'action' => 'DomainWhois',
-                'identifier' => $identifier,
-                'secret' => $secret,
-                'domain' => $domainFqdn,
-                'responsetype' => 'json',
-            ]);
-
-        // Check if the request was successful
-        if ($whoisRes->failed()) {
-            \Log::error('WHMCS API request failed', [
-                'status' => $whoisRes->status(),
-                'body' => $whoisRes->body(),
-                'domain' => $domainFqdn,
-            ]);
-            return response()->json([
-                'error' => 'WHMCS API request failed with status ' . $whoisRes->status(),
-            ], $whoisRes->status());
-        }
-
-        // Parse the JSON response
-        $responseData = $whoisRes->json();
-
-        // Log the full response for debugging
-        \Log::info('WHMCS API response', [
-            'domain' => $domainFqdn,
-            'response' => $responseData,
-            'status' => $whoisRes->status(),
-        ]);
-
-        // Check for WHMCS API error
-        if (!isset($responseData['result']) || $responseData['result'] === 'error') {
-            $errorMessage = $responseData['message'] ?? 'Unknown WHMCS API error';
-            \Log::error('WHMCS API error', ['message' => $errorMessage, 'domain' => $domainFqdn]);
-
-            // Specifically check for license-related errors
-            if (stripos($errorMessage, 'license') !== false) {
-                return response()->json([
-                    'error' => 'WHMCS License Error: ' . $errorMessage,
-                    'suggestion' => 'Ensure the API call uses the licensed domain/IP and verify license in WHMCS admin.',
-                ], 500);
-            }
-
-            return response()->json([
-                'error' => 'WHMCS API error: ' . $errorMessage,
-            ], 500);
-        }
-
-        // Return successful response
-        return response()->json([
-            'result' => $responseData['result'],
-            'whois' => $responseData['whois'] ?? 'No WHOIS data available',
-            'status' => $whoisRes->status(),
-        ], 200);
-
-    } catch (\Illuminate\Http\Client\ConnectionException $e) {
-        // Handle connection errors (e.g., timeout, unreachable server)
-        \Log::error('WHMCS API connection error', [
-            'error' => $e->getMessage(),
-            'domain' => $domainFqdn,
-        ]);
-        return response()->json([
-            'error' => 'Failed to connect to WHMCS API: ' . $e->getMessage(),
-        ], 503);
-    } catch (\Exception $e) {
-        // Handle other unexpected errors
-        \Log::error('Unexpected error in WHMCS API call', [
-            'error' => $e->getMessage(),
-            'domain' => $domainFqdn,
-        ]);
-        return response()->json([
-            'error' => 'An unexpected error occurred: ' . $e->getMessage(),
-        ], 500);
-    }
-}
 }
