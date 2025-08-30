@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -78,7 +79,11 @@ class AuthController extends Controller
         $shouldLogoutAllDevices = $request->input('all_devices', false);
         $user = Auth::user();
 
-        $shouldLogoutAllDevices ? $user->tokens()->delete() : $user->currentAccessToken()->delete();
+        if ($shouldLogoutAllDevices) {
+            $user->tokens()->delete();
+        } else {
+            $user->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'data' => null,
@@ -95,6 +100,39 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
+        $whmcsClientId = $user->whmcs_client_id;
+
+        if ($whmcsClientId) {
+            try {
+                $whmcsData = [
+                    'username' => config('services.whmcs.identifier'),
+                    'password' => config('services.whmcs.secret'),
+                    'responsetype' => 'json',
+                    'action' => 'DeleteClient',
+                    'clientid' => $whmcsClientId,
+                    'deleteusers' => false,
+                    'deletetransactions' => true,
+                ];
+
+                $response = Http::timeout(300)->asForm()->post(config('services.whmcs.url').'/includes/api.php', $whmcsData);
+
+                if ($response->successful()) {
+                    $result = $response->json();
+
+                    if ($result['result'] !== 'success') {
+                        Log::warning('Failed to delete WHMCS client', [
+                            'client_id' => $whmcsClientId,
+                            'response' => $result,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error deleting WHMCS client', [
+                    'client_id' => $whmcsClientId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $user->delete();
 

@@ -88,15 +88,12 @@ class DomainSettingController extends Controller
 
         $params = [
             'action' => 'DomainUpdateLockingStatus',
-            'identifier' => $identifier,
-            'secret' => $secret,
+            'username' => $identifier,
+            'password' => $secret,
             'domainid' => $domainId,
+            'lockstatus' => $lockStatus ?? true,
             'responsetype' => 'json',
         ];
-
-        if ($lockStatus !== null) {
-            $params['lockstatus'] = $lockStatus;
-        }
 
         $lockRes = Http::asForm()
             ->timeout(300)

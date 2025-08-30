@@ -27,6 +27,9 @@ class WhmcsService
             'username' => $this->username,
             'password' => $this->password,
             'responsetype' => 'json',
+            'sendregistrar' => true,
+            'autosetup' => true,
+            'idprotection' => true,
         ]);
 
         $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
