@@ -114,8 +114,8 @@ class WhmcsService
             'serviceusername' => $serviceUsername,
             'servicepassword' => $servicePassword,
             'registrar' => $registrar,
-            'sendregistrar' => true,
-            'autosetup' => true,
+            'sendregistrar' => false,
+            'autosetup' => false,
             'sendemail' => true,
         ], fn ($v) => !is_null($v));
 
@@ -175,7 +175,7 @@ class WhmcsService
         return $result ?? ['result' => 'error', 'message' => 'No response'];
     }
 
-    public function domainRegister(int $domainId, ?string $domain = null, ?string $idnLanguage = null): array
+    public function domainRegister(int $domainId): array
     {
         $body = array_filter([
             'action' => 'DomainRegister',
@@ -183,9 +183,6 @@ class WhmcsService
             'password' => $this->password,
             'responsetype' => 'json',
             'domainid' => $domainId,
-            'domain' => $domain,
-            'idnlanguage' => $idnLanguage,
-            ''
         ], fn ($v) => !is_null($v));
 
         $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
@@ -217,5 +214,42 @@ class WhmcsService
             unset($redacted['request_data']['username'], $redacted['request_data']['password']);
         }
         Log::error($message, $redacted);
+    }
+
+    public function getClient(int $clientId): array
+    {
+        $body = [
+            'action' => 'GetClientsDetails',
+            'username' => $this->username,
+            'password' => $this->password,
+            'responsetype' => 'json',
+            'clientid' => $clientId,
+        ];
+
+        $response = Http::asForm()->timeout(300)->post($this->baseUrl.'/includes/api.php', $body);
+        if ($response->failed()) {
+            $this->logError('WHMCS GetClientsDetails request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'client_id' => $clientId,
+            ]);
+            throw new \RuntimeException('Failed to connect to WHMCS API');
+        }
+
+        $result = $response->json();
+        if (!isset($result['result']) || $result['result'] !== 'success') {
+            $this->logError('WHMCS GetClientsDetails error', [
+                'message' => $result['message'] ?? 'Unknown error',
+                'data' => $result,
+                'client_id' => $clientId,
+            ]);
+            throw new \RuntimeException('WHMCS API error: '.($result['message'] ?? 'Unknown error'));
+        }
+
+        if (isset($result['client'])) {
+            unset($result['client']);
+        }
+
+        return $result;
     }
 }

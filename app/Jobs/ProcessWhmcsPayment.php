@@ -28,7 +28,7 @@ class ProcessWhmcsPayment implements ShouldQueue
     {
         $payment = Payment::with([
             'order:id,whmcs_invoice_id,whmcs_order_id',
-            'order.items:id,order_id,domain_name,whmcs_domain_id'
+            'order.items:id,order_id,domain_name,whmcs_domain_id',
         ])->find($this->paymentId);
 
         if (!$payment || !$payment->order) {
@@ -113,7 +113,6 @@ class ProcessWhmcsPayment implements ShouldQueue
 
                                 $registerResult = $whmcsService->domainRegister(
                                     (int) $item->whmcs_domain_id,
-                                    $item->domain_name
                                 );
 
                                 Log::info('Domain registration result', [

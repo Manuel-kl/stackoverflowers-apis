@@ -19,6 +19,7 @@ class AuthController extends Controller
 
         $user = User::create($data);
         $token = $user->createToken('auth_token')->plainTextToken;
+        $phoneNumberWithoutCountryCode = preg_replace('/^(\+254)/', '', $data['phone_number']);
 
         try {
             $whmcsData = [
@@ -30,7 +31,7 @@ class AuthController extends Controller
                 'lastname' => $data['lastname'],
                 'email' => $data['email'],
                 'password2' => $data['password'],
-                'phonenumber' => $data['phone_number'],
+                'phonenumber' => $phoneNumberWithoutCountryCode,
                 'skipvalidation' => true,
             ];
 

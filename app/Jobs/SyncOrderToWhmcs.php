@@ -48,6 +48,8 @@ class SyncOrderToWhmcs implements ShouldQueue
             'domaintype' => $domaintype,
             'regperiod' => $regperiod,
             'billingcycle' => $billingcycle,
+            'nameserver1' => 'ns1.he.net',
+            'nameserver2' => 'ns2.he.net',
         ];
 
         $result = $whmcs->addOrder($payload);

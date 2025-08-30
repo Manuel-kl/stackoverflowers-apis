@@ -47,6 +47,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/password/change', [PasswordResetController::class, 'changePassword']);
     Route::delete('/user/delete', [AuthController::class, 'deleteUser']);
     Route::post('/user/details', [UserController::class, 'userDetails']);
+    Route::get('/user/whmcs-details', [UserController::class, 'checkWhmcsUserDetails']);
 
     // User domains
     Route::get('/user/domains', [UserDomainController::class, 'index']);

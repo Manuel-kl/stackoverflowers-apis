@@ -59,7 +59,7 @@ class UserDomainController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to fetch domains',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

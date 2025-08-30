@@ -4,12 +4,20 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\UserDetailsRequest;
+use App\Services\WhmcsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
+    protected WhmcsService $whmcsService;
+
+    public function __construct(WhmcsService $whmcsService)
+    {
+        $this->whmcsService = $whmcsService;
+    }
+
     public function index(): JsonResponse
     {
         $user = Auth::user();
@@ -74,6 +82,36 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Internal server error while updating client',
+                'data' => [
+                    'error' => $e->getMessage(),
+                ],
+            ], 500);
+        }
+    }
+
+    public function checkWhmcsUserDetails(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user->whmcs_client_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found in WHMCS',
+                ], 404);
+            }
+
+            $user['whmcs_details'] = $this->whmcsService->getClient($user->whmcs_client_id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'WHMCS client details retrieved successfully',
+                'data' => $user,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve WHMCS client details',
                 'data' => [
                     'error' => $e->getMessage(),
                 ],
