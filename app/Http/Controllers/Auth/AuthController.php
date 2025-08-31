@@ -110,7 +110,7 @@ class AuthController extends Controller
                     'responsetype' => 'json',
                     'action' => 'DeleteClient',
                     'clientid' => $whmcsClientId,
-                    'deleteusers' => false,
+                    'deleteusers' => true,
                     'deletetransactions' => true,
                 ];
 
