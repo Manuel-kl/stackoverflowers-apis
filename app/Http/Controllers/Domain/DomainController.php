@@ -251,7 +251,7 @@ class DomainController extends Controller
         $status = null;
         $whoisBody = $whoisRes->ok() ? $whoisRes->json() : null;
         if (is_array($whoisBody) && ($whoisBody['result'] ?? '') === 'success') {
-            $status = $whoisBody['status'] ?? null;
+            $status = $whoisBody['status'] ?? '';
             $isAvailable = ($status === 'available');
         }
 
@@ -317,8 +317,8 @@ class DomainController extends Controller
             'status' => $status,
             'legacyStatus' => $status,
             'score' => 1,
-            'isRegistered' => $isAvailable === null ? null : !$isAvailable,
-            'isAvailable' => $isAvailable,
+            'isRegistered' => $isAvailable === null ? false : !$isAvailable,
+            'isAvailable' => $isAvailable === null ? false : $isAvailable,
             'isValidDomain' => true,
             'domainErrorMessage' => '',
             'pricing' => $pricingFormatted,
