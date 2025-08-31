@@ -5,7 +5,7 @@ A Laravel based domain management system for handling domain registrations, rene
 ## Features
 
 - Domain registration and management
-- WHMCS integration for client management
+- WHMCS integration for client management (https://www.whmcs.com/)
 - Paystack payment gateway integration
 - Google Mail API integration
 - SMS notifications through Tiaraconnect APIs
@@ -46,7 +46,7 @@ cp .env.example .env
 
 **Important**: Ensure you provide the following required API keys and credentials for the application to function properly:
 
-- **WHMCS Integration** - For client management and billing
+- **WHMCS Integration** - For client management and billing (https://www.whmcs.com/)
   - `WHMCS_IDENTIFIER`
   - `WHMCS_SECRET`
   - `WHMCS_URL`
