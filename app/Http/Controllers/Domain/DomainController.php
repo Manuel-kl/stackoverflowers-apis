@@ -251,7 +251,7 @@ class DomainController extends Controller
         $status = null;
         $whoisBody = $whoisRes->ok() ? $whoisRes->json() : null;
         if (is_array($whoisBody) && ($whoisBody['result'] ?? '') === 'success') {
-            $status = $whoisBody['status'] ?? '';
+            $status = $whoisBody['status'] ?? null;
             $isAvailable = ($status === 'available');
         }
 
@@ -314,8 +314,8 @@ class DomainController extends Controller
             'tldNoDots' => str_replace('.', '', $tld),
             'sld' => $sld,
             'idnSld' => $sld,
-            'status' => $status,
-            'legacyStatus' => $status,
+            'status' => $status === null ? '' : $status,
+            'legacyStatus' => $status === null ? '' : $status,
             'score' => 1,
             'isRegistered' => $isAvailable === null ? false : !$isAvailable,
             'isAvailable' => $isAvailable === null ? false : $isAvailable,
