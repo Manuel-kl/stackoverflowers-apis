@@ -122,6 +122,8 @@ class AuthController extends Controller
                     if ($result['result'] !== 'success') {
                         Log::warning('Failed to delete WHMCS client', [
                             'client_id' => $whmcsClientId,
+                            'deleteusers' => false,
+                            'deletetransactions' => true,
                             'response' => $result,
                         ]);
                     }
