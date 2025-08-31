@@ -67,7 +67,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     // Support and tickets
     Route::apiResource('tickets', TicketController::class);
     Route::post('/tickets/{id}/reply', [TicketController::class, 'ticketReply']);
-
 });
 
 // Route::get('/check', [DomainController::class, 'check']);

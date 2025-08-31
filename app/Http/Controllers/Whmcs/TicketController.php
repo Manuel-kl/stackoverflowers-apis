@@ -153,7 +153,6 @@ class TicketController extends Controller
         }
     }
 
-    // for status only
     public function update(Request $request, $id): JsonResponse
     {
         $request->validate([
@@ -185,7 +184,7 @@ class TicketController extends Controller
         ], 500);
     }
 
-    public function destroy(Request $request, $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
         $whmcsData['action'] = 'DeleteTicket';
         $whmcsData['ticketid'] = $id;
@@ -217,16 +216,10 @@ class TicketController extends Controller
 
         $request->validate([
             'message' => 'required|string',
-            'markdown' => 'nullable|boolean',
-            'status' => 'nullable|string',
-            'noemail' => 'nullable|boolean',
-            'customfields' => 'nullable|string',
-            'attachments' => 'nullable|array',
-            'created' => 'nullable|string',
         ]);
 
         try {
-            $whmcsData = $request->only(['message', 'markdown', 'status', 'noemail', 'customfields', 'attachments', 'created']);
+            $whmcsData = $request->only(['message']);
             $whmcsData['action'] = 'AddTicketReply';
             $whmcsData['ticketid'] = $id;
             $whmcsData['clientid'] = $user->whmcs_client_id;
