@@ -18,6 +18,7 @@ use App\Http\Controllers\Payment\OrderPaymentController;
 use App\Http\Controllers\Payment\PaystackController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Whmcs\CreateOrderController;
+use App\Http\Controllers\Whmcs\TicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/signup', [AuthController::class, 'register']);
@@ -62,6 +63,11 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     // Payment routes
     Route::post('/orders/{order}/pay', [OrderPaymentController::class, 'payOrder']);
     Route::get('/payments/query', [PaystackController::class, 'queryTransaction']);
+
+    // Support and tickets
+    Route::apiResource('tickets', TicketController::class);
+    Route::post('/tickets/{id}/reply', [TicketController::class, 'ticketReply']);
+
 });
 
 // Route::get('/check', [DomainController::class, 'check']);
